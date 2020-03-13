@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "$[taskcat_getaz_2]"
+	},
+	    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.medium"
+	},
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "override"
+	},
+    {
+        "ParameterKey": "CAservPwd",
+        "ParameterValue": "$[taskcat_genpass_8A]"
+	},
+    {
+        "ParameterKey": "OSType",
+        "ParameterValue": "Linux"
+	},
+    {
+        "ParameterKey": "RemoteAccessCIDR",
+        "ParameterValue": "0.0.0.0/0"
+	}
+]
