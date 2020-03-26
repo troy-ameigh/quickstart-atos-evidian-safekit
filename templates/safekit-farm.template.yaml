@@ -1,0 +1,469 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  This template creates a  SafeKit Farm Cluster  installed in up to four availability
+  zones in one region. **WARNING** This template creates AWS resources. You will be
+  billed for the AWS resources used if you create a stack from this template.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - NumberOfInstances
+          - AvailabilityZones
+          - RemoteAccessCIDR
+          - VipCIDR
+      - Label:
+          default: Amazon EC2 Instances Configuration
+        Parameters:
+          - KeyPairName
+          - InstanceType
+          - OSType
+      - Label:
+          default: Evidian SafeKit – Farm Cluster Configuration
+        Parameters:
+          - SafekitModuleName
+          - InstanceNamePrefix
+          - VipPort
+          - CAservPwd
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+    ParameterLabels:
+      NumberOfInstances:
+        default: Number of Instances
+      AvailabilityZones:
+        default: Availability Zones
+      InstanceType:
+        default: Instance Type
+      OSType:
+        default: Operating System
+      RemoteAccessCIDR:
+        default: Allowed CIDR for SafeKit Console, SSH, RDP
+      KeyPairName:
+        default: Key Pair Name
+      CAservPwd:
+        default: Password
+      SafekitModuleName:
+        default: Safekit Module Name
+      InstanceNamePrefix:
+        default: Server Name Prefix
+      VipPort:
+        default: Virtual IP Port
+      VipCIDR:
+        default: Allowed CIDR for Virtual IP
+      QSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+      QSS3BucketName:
+        default: S3 Bucket Name
+Parameters:
+  NumberOfInstances:
+    AllowedValues:
+      - '2'
+      - '3'
+      - '4'
+    Default: '2'
+    Description: Number of EC2 instances to create
+    Type: String
+  AvailabilityZones:
+    Description: Set as many availability zones as there are instances
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  InstanceType:
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m3.medium
+      - m3.large
+      - m4.large
+    Default: t2.micro
+    Description: Amazon EC2 instance type.
+    Type: String
+  KeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your EC2
+      instance after it launches.
+    Type: AWS::EC2::KeyPair::KeyName
+    AllowedPattern: .+
+    ConstraintDescription: Key Pair Name must not be empty
+  CAservPwd:
+    Description: Password for  SafeKit web console certificates
+    Type: String
+    AllowedPattern: .+
+    ConstraintDescription: Safekit certificate server password must not be empty
+  OSType:
+    AllowedValues:
+      - Linux
+      - Windows
+    Default: Linux
+    Description: Operating system
+    Type: String
+  RemoteAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: '0.0.0.0/0 will allow access from ANY IP address'
+    Type: String
+  SafekitModuleName:
+    Description: Module name
+    Default: farm
+    Type: String
+  VipPort:
+    Description: Port of the Virtual IP which is load balanced
+    Type: Number
+    Default: 9453
+    MinValue: 1
+    MaxValue: 49151
+  VipCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: '0.0.0.0/0 will allow access from ANY IP address'
+    Type: String
+    Default: '0.0.0.0/0'
+  InstanceNamePrefix:
+    Description: Server name prefix in the SafeKit web console for each instance
+    Default: Server
+    Type: String
+  QSS3BucketName:
+    Default: quickstart-evidian-safekit
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: ''
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+Conditions:
+  LinuxCond: !Equals
+    - !Ref 'OSType'
+    - Linux
+  2AZCondition: !Or
+    - !Equals
+      - !Ref 'NumberOfInstances'
+      - '2'
+    - !Condition '3AZCondition'
+  3AZCondition: !Or
+    - !Equals
+      - !Ref 'NumberOfInstances'
+      - '3'
+    - !Condition '4AZCondition'
+  4AZCondition: !Equals
+    - !Ref 'NumberOfInstances'
+    - '4'
+Mappings:
+  InstancesMap:
+    '1':
+      Wait: 0
+    '2':
+      Wait: 1
+    '3':
+      Wait: 2
+    '4':
+      Wait: 3
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
+      Parameters:
+        AvailabilityZones: !Join
+          - ','
+          - !Ref 'AvailabilityZones'
+        KeyPairName: !Ref 'KeyPairName'
+        NumberOfAZs: !Ref 'NumberOfInstances'
+        VPCCIDR: 10.0.0.0/16
+        PublicSubnet1CIDR: 10.0.1.0/24
+        PublicSubnet2CIDR: !If
+          - 2AZCondition
+          - 10.0.2.0/24
+          - !Ref 'AWS::NoValue'
+        PublicSubnet3CIDR: !If
+          - 3AZCondition
+          - 10.0.3.0/24
+          - !Ref 'AWS::NoValue'
+        PublicSubnet4CIDR: !If
+          - 4AZCondition
+          - 10.0.4.0/24
+          - !Ref 'AWS::NoValue'
+        CreatePrivateSubnets: 'false'
+  NetStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-net.template'
+      Parameters:
+        VpcId: !GetAtt 'VPCStack.Outputs.VPCID'
+        NumberOfInstances: !Ref 'NumberOfInstances'
+        RemoteAccessCIDR: !Ref 'RemoteAccessCIDR'
+        RemoteAccessPort: !If
+          - LinuxCond
+          - 22
+          - 3389
+        VipCIDR: !Ref 'VipCIDR'
+        VipPort: !Ref 'VipPort'
+        HealthURL: !Sub '/var/modules/${SafekitModuleName}/ready.txt'
+        PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        PublicSubnet2ID: !If
+          - 2AZCondition
+          - !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+          - ''
+        PublicSubnet3ID: !If
+          - 3AZCondition
+          - !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
+          - ''
+        PublicSubnet4ID: !If
+          - 4AZCondition
+          - !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
+          - ''
+  EIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  EIP2:
+    Condition: 2AZCondition
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  EIP3:
+    Condition: 3AZCondition
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  EIP4:
+    Condition: 4AZCondition
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  WaitClusterHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WaitCluster:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref 'WaitClusterHandle'
+      Timeout: '10000'
+      Count: !FindInMap
+        - InstancesMap
+        - !Ref 'NumberOfInstances'
+        - Wait
+  WaitConfigHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+  WaitConfig:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref 'WaitConfigHandle'
+      Timeout: '20000'
+      Count: 1
+  Instance1Stack:
+    DependsOn: WaitCluster
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      Parameters:
+        AvailabilityZone: !Select
+          - '0'
+          - !Ref 'AvailabilityZones'
+        KeyPairName: !Ref 'KeyPairName'
+        CAservPwd: !Ref 'CAservPwd'
+        CertificateCN: !Sub 'SafeKit CA ${AWS::StackName} Stack'
+        InstanceType: !Ref 'InstanceType'
+        InstanceNum: '1'
+        InstanceName: !Sub '${InstanceNamePrefix}1'
+        SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
+        PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        EIPAllocationId: !GetAtt 'EIP1.AllocationId'
+        CompletionHandle: !Ref 'WaitConfigHandle'
+        SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/farm.safe'
+        SafekitModuleName: !Ref 'SafekitModuleName'
+        ClusterFile: !Join
+          - "\n"
+          - - <?xml version="1.0" encoding="utf-8"?>
+            - <cluster><lans>
+            - <lan name="console" console="on" command="off" framework="off">
+            - !Sub '<node name="${InstanceNamePrefix}1" addr="${EIP1}"/>'
+            - !If
+              - 2AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}2" addr="${EIP2}"/>'
+              - ''
+            - !If
+              - 3AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}3" addr="${EIP3}"/>'
+              - ''
+            - !If
+              - 4AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}4" addr="${EIP4}"/>'
+              - ''
+            - </lan>
+            - <lan name="default" console="on" command="on" framework="on">
+            - !Sub '<node name="${InstanceNamePrefix}1" addr="10.0.1.10"/>'
+            - !If
+              - 2AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}2" addr="10.0.2.10"/>'
+              - ''
+            - !If
+              - 3AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}3" addr="10.0.3.10"/>'
+              - ''
+            - !If
+              - 4AZCondition
+              - !Sub '<node name="${InstanceNamePrefix}4" addr="10.0.4.10"/>'
+              - ''
+            - </lan>
+            - </lans></cluster>
+        ConfigScript: !If
+          - LinuxCond
+          - !Join
+            - "\n"
+            - - '#!/bin/bash -ev'
+              - !Sub 'curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml
+                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
+              - !Sub '/opt/safekit/safekit -H "*" -E ${SafekitModuleName}'
+              - !Sub '/opt/safekit/safekit -H "*" start -m ${SafekitModuleName}'
+          - !Join
+            - "\n"
+            - - !Sub '& /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml
+                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
+              - !Sub '& /safekit/safekit -H "*" -E ${SafekitModuleName}'
+              - !Sub '& /safekit/safekit -H "*" start -m ${SafekitModuleName}'
+        IpNamesList: !Join
+          - ''
+          - - "[\n"
+            - '"'
+            - !GetAtt 'NetStack.Outputs.DNSName'
+            - "\",\n"
+            - "null\n]"
+        ConsoleAddrList: !Join
+          - ''
+          - - "[\n"
+            - !Sub "\"10.0.1.10\",\n\"${EIP1}\",\n"
+            - !If
+              - 2AZCondition
+              - !Sub "\"10.0.2.10\",\n\"${EIP2}\",\n"
+              - ''
+            - !If
+              - 3AZCondition
+              - !Sub "\"10.0.3.10\",\n\"${EIP3}\",\n"
+              - ''
+            - !If
+              - 4AZCondition
+              - !Sub "\"10.0.4.10\",\n\"${EIP4}\",\n"
+              - ''
+            - "null\n]"
+        CommandAddrList: !Join
+          - ''
+          - - "[\n"
+            - !If
+              - 2AZCondition
+              - "\"10.0.2.10\",\n"
+              - ''
+            - !If
+              - 3AZCondition
+              - "\"10.0.3.10\",\n"
+              - ''
+            - !If
+              - 4AZCondition
+              - "\"10.0.4.10\",\n"
+              - ''
+            - "null\n]"
+  Instance2Stack:
+    Condition: 2AZCondition
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      Parameters:
+        AvailabilityZone: !Select
+          - '1'
+          - !Ref 'AvailabilityZones'
+        KeyPairName: !Ref 'KeyPairName'
+        CAservPwd: !Ref 'CAservPwd'
+        InstanceType: !Ref 'InstanceType'
+        InstanceNum: '2'
+        InstanceName: !Sub '${InstanceNamePrefix}2'
+        SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
+        PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+        EIPAllocationId: !GetAtt 'EIP2.AllocationId'
+        CompletionHandle: !Ref 'WaitClusterHandle'
+  Instance3Stack:
+    Condition: 3AZCondition
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      Parameters:
+        AvailabilityZone: !Select
+          - '2'
+          - !Ref 'AvailabilityZones'
+        KeyPairName: !Ref 'KeyPairName'
+        CAservPwd: !Ref 'CAservPwd'
+        InstanceType: !Ref 'InstanceType'
+        InstanceNum: '3'
+        InstanceName: !Sub '${InstanceNamePrefix}3'
+        SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
+        PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
+        EIPAllocationId: !GetAtt 'EIP3.AllocationId'
+        CompletionHandle: !Ref 'WaitClusterHandle'
+  Instance4Stack:
+    Condition: 4AZCondition
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      Parameters:
+        AvailabilityZone: !Select
+          - '3'
+          - !Ref 'AvailabilityZones'
+        KeyPairName: !Ref 'KeyPairName'
+        CAservPwd: !Ref 'CAservPwd'
+        InstanceType: !Ref 'InstanceType'
+        InstanceNum: '4'
+        InstanceName: !Sub '${InstanceNamePrefix}4'
+        SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
+        PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
+        EIPAllocationId: !GetAtt 'EIP4.AllocationId'
+        CompletionHandle: !Ref 'WaitClusterHandle'
+Outputs:
+  Server1:
+    Description: Server 1 IP address
+    Value: !Ref 'EIP1'
+  Server2:
+    Condition: 2AZCondition
+    Description: Server 2 IP address
+    Value: !Ref 'EIP2'
+  Server3:
+    Condition: 3AZCondition
+    Description: Server 3 IP address
+    Value: !Ref 'EIP3'
+  Server4:
+    Condition: 4AZCondition
+    Description: Server 4 IP address
+    Value: !Ref 'EIP4'
+  CredentialsLogin:
+    Description: 'Step 1. Get the credentials ( User : CA_admin, Password : Password
+      for SafeKit web console certificates )'
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref 'EIP1'
+        - :9001/adduser.html
+  WebConsole:
+    Description: Step 2. Start the console
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref 'EIP1'
+        - :9453/deploy.html?firewallDialog=false
+  VIPTest:
+    Description: Step 3. Test the Virtual IP
+    Value: !Join
+      - ''
+      - - https://
+        - !GetAtt 'NetStack.Outputs.DNSName'
+        - :9453
+        - !Sub '/cgi-bin/mosaic?arg0=${SafekitModuleName}&mode=mosaic'
+  FQDN:
+    Description: Virtal IP DNS name
+    Value: !GetAtt 'NetStack.Outputs.DNSName'

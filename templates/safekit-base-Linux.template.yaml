@@ -1,0 +1,264 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SafeKit Linux EC2 instance subtemplate
+Parameters:
+  AvailabilityZone:
+    Description: Choose an Availability Zone
+    Type: AWS::EC2::AvailabilityZone::Name
+  PublicSubnet:
+    Description: ID of the Public Subnet
+    Type: String
+  EIPAllocationId:
+    Description: AllocationId of the EIP to associate with this Instance
+    Type: String
+  SecurityGroup:
+    Description: ID of the Security Group
+    Type: AWS::EC2::SecurityGroup::Id
+  InstanceType:
+    Default: t2.micro
+    Type: String
+  InstanceNum:
+    Type: String
+  InstanceName:
+    Type: String
+  KeyPairName:
+    Description: Public/private key pairs allow you to securely connect to your EC2
+      instance after it launches.
+    Type: AWS::EC2::KeyPair::KeyName
+  CAservPwd:
+    Type: String
+  CompletionHandle:
+    Type: String
+  ClusterFile:
+    Type: String
+    Default: ''
+  ConfigScript:
+    Type: String
+    Default: "#!/bin/bash\n"
+  ConsoleAddrList:
+    Type: String
+    Default: ''
+  CommandAddrList:
+    Type: String
+    Default: ''
+  IpNamesList:
+    Type: String
+    Default: ''
+  SafekitModuleURL:
+    Default: none
+    Type: String
+  SafekitModuleName:
+    Default: none
+    Type: String
+  CertificateCN:
+    Default: SafeKit
+    Type: String
+Conditions:
+  FirstInstance: !Equals
+    - !Ref 'InstanceNum'
+    - '1'
+  ModuleNOK: !Equals
+    - !Ref 'SafekitModuleName'
+    - none
+Mappings:
+  AWSAMIRegionMap:
+    AMI:
+      AMZNLINUXHVM: amzn-ami-hvm-2018.03.0.20181129-x86_64-gp2
+    ap-northeast-1:
+      AMZNLINUXHVM: ami-00a5245b4816c38e6
+    ap-northeast-2:
+      AMZNLINUXHVM: ami-00dc207f8ba6dc919
+    ap-south-1:
+      AMZNLINUXHVM: ami-0ad42f4f66f6c1cc9
+    ap-southeast-1:
+      AMZNLINUXHVM: ami-05b3bcf7f311194b3
+    ap-southeast-2:
+      AMZNLINUXHVM: ami-02fd0b06f06d93dfc
+    ca-central-1:
+      AMZNLINUXHVM: ami-07423fb63ea0a0930
+    eu-central-1:
+      AMZNLINUXHVM: ami-0cfbf4f6db41068ac
+    eu-west-1:
+      AMZNLINUXHVM: ami-08935252a36e25f85
+    eu-west-2:
+      AMZNLINUXHVM: ami-01419b804382064e4
+    sa-east-1:
+      AMZNLINUXHVM: ami-05145e0b28ad8e0b2
+    us-east-1:
+      AMZNLINUXHVM: ami-0080e4c5bc078760e
+    us-east-2:
+      AMZNLINUXHVM: ami-0cd3dfa4e37921605
+    us-west-1:
+      AMZNLINUXHVM: ami-0ec6517f6edbf8044
+    us-west-2:
+      AMZNLINUXHVM: ami-01e24be29428c15b2
+Resources:
+  SafeKitServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Ref 'AvailabilityZone'
+      Tags:
+        - Key: Name
+          Value: !Ref 'InstanceName'
+      ImageId: !FindInMap
+        - AWSAMIRegionMap
+        - !Ref 'AWS::Region'
+        - AMZNLINUXHVM
+      InstanceType: !Ref 'InstanceType'
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref 'PublicSubnet'
+          PrivateIpAddress: !Sub '10.0.${InstanceNum}.10'
+          GroupSet:
+            - !Ref 'SecurityGroup'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "#!/bin/bash -ex\n"
+            - "yum install -y aws-cfn-bootstrap\n"
+            - "# Download and unpack safekit package\n"
+            - "wget --no-verbose --retry-connrefused  --random-wait -O /tmp/safekit.bin\
+              \ https://support.evidian.com/solutions/downloads/safekit/cloud/platforms/linux/current_versions/safekit_cloud.bin\n"
+            - "cd /tmp\n"
+            - "chmod +x safekit.bin\n"
+            - "./safekit.bin\n"
+            - "yum localinstall -y safekit_x86_64_*.rpm\n"
+            - "# Install the files and packages from the metadata\n"
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource SafeKitServer '
+            - '         --configsets '
+            - !If
+              - FirstInstance
+              - !If
+                - ModuleNOK
+                - InstallCluster
+                - InstallModule
+              - InstallBase
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - "# Signal the status \n"
+            - /opt/aws/bin/cfn-signal "
+            - !Ref 'CompletionHandle'
+            - "\" \n"
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          InstallBase:
+            - SafeKitInstall
+            - PostConfig
+          InstallCluster:
+            - SafeKitInstall
+            - MasterConfig
+            - PostConfig
+          InstallModule:
+            - SafeKitInstall
+            - MasterConfig
+            - ModuleConfig
+            - PostConfig
+        SafeKitInstall:
+          commands:
+            caservstart:
+              cwd: /opt/safekit/web/bin
+              command: !Sub './startcaserv ${CAservPwd}'
+        MasterConfig:
+          files:
+            /var/safekit/cluster/cluster.xml:
+              content: !Ref 'ClusterFile'
+              mode: '000664'
+              owner: safekit
+              group: safekit
+            /opt/safekit/web/conf/ipnames.json:
+              content: !Ref 'IpNamesList'
+              mode: '000444'
+              owner: safekit
+              group: safekit
+            /opt/safekit/web/conf/ipv6.json:
+              content: "[\nnull\n]"
+              mode: '000444'
+              owner: safekit
+              group: safekit
+            /opt/safekit/web/conf/ipv4.json:
+              content: !Ref 'ConsoleAddrList'
+              mode: '000444'
+              owner: safekit
+              group: safekit
+            /opt/safekit/web/conf/cmdaddr.json:
+              content: !Ref 'CommandAddrList'
+              mode: '000444'
+              owner: safekit
+              group: safekit
+            /opt/safekit/web/bin/uploadcerts:
+              content: !Join
+                - "\n"
+                - - '#!/bin/bash -ev'
+                  - cd /opt/safekit/web/bin
+                  - export LD_LIBRARY_PATH=/opt/safekit/private/bin
+                  - !Sub './initssl sca "/CN=${CertificateCN}"'
+                  - !Sub 'userpwd=CA_admin:${CAservPwd}'
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F action=swhttps
+                    https://localhost:9001/caserv
+                  - for targetip in `cat /opt/safekit/web/conf/cmdaddr.json | awk
+                    '/".*",/{ print substr($1,2,length($1)-3);}'`; do
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/cacert.crt
+                    -F action=import -F target=T_CA -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/cacert.crt
+                    -F action=import -F target=T_CCA -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/server.crt
+                    -F action=import -F target=T_SC -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/server.key
+                    -F action=import -F target=T_SK -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/admin.crt
+                    -F action=import -F target=T_CC -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/admin.key
+                    -F action=import -F target=T_CK -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/proxy.crtkey
+                    -F action=import -F target=T_PCCK -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F file=@/opt/safekit/web/conf/sslclient.crl
+                    -F action=import -F target=T_CRL -F add=yes https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F action=swhttps
+                    https://$targetip:9001/caserv
+                  - /opt/safekit/private/bin/curl.exe -k -u $userpwd -X POST -F action=shutdown
+                    https://$targetip:9001/caserv
+                  - done
+              mode: '000774'
+              owner: safekit
+              group: safekit
+          commands:
+            1-uploadcerts:
+              command: /opt/safekit/web/bin/uploadcerts
+            2-clusterconf:
+              command: /opt/safekit/safekit cluster config
+            3-clusterdeploy:
+              command: /opt/safekit/safekit -H "*" -G
+        ModuleConfig:
+          commands:
+            1-moduledoanload:
+              command: !Sub '/opt/safekit/safekit -r curl.exe --insecure --output
+                /var/safekit/tmp/module.safe  ${SafekitModuleURL}'
+            2-moduleinstall:
+              command: !Sub '/opt/safekit/safekit module install -m ${SafekitModuleName}
+                /var/safekit/tmp/module.safe'
+            3-modulecleaninstall:
+              command: rm -f /var/safekit/tmp/module.safe
+        PostConfig:
+          files:
+            /var/safekit/tmp/safeconfig.sh:
+              content: !Ref 'ConfigScript'
+              mode: '000554'
+              owner: safekit
+              group: safekit
+          commands:
+            1-postconfig:
+              command: /var/safekit/tmp/safeconfig.sh
+  EIPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref 'SafeKitServer'
+      AllocationId: !Ref 'EIPAllocationId'
+Outputs:
+  InstanceId:
+    Description: Id of instance
+    Value: !Ref 'SafeKitServer'

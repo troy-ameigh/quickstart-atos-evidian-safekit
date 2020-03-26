@@ -29,4 +29,4 @@ tests:
     - us-east-1
     - us-east-2
     - us-west-2
-    template_file: safekit-mirror.template
+    template_file: safekit-mirror.template.yaml

@@ -15,7 +15,7 @@ global:
 tests:
   farm-Linux:
     parameter_input: farm-Linux.json
-    template_file: safekit-farm.template
+    template_file: safekit-farm.template.yaml
   farm-Windows:
     parameter_input: farm-Windows.json
-    template_file: safekit-farm.template
+    template_file: safekit-farm.template.yaml

@@ -28,7 +28,7 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-mirror.template
+    template_file: safekit-mirror.template.yaml
   farm-Linux:
     parameter_input: farm-Linux.json
     regions:
@@ -37,7 +37,7 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-farm.template
+    template_file: safekit-farm.template.yaml
   mirror-Windows:
     parameter_input: mirror-Windows.json
     regions:
@@ -47,7 +47,7 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-mirror.template
+    template_file: safekit-mirror.template.yaml
   farm-Windows:
     parameter_input: farm-Windows.json
     regions:
@@ -56,4 +56,4 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-farm.template
+    template_file: safekit-farm.template.yaml

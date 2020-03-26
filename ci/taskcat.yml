@@ -29,7 +29,7 @@ tests:
     - ap-southeast-2
     - ca-central-1
     - eu-central-1
-    template_file: workload-json-master.template
+    template_file: workload-json-master.template.yaml
   yaml-master:
     parameter_input: workload-master.json
     regions:
@@ -39,4 +39,4 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: workload-yaml-master.template
+    template_file: workload-yaml-master.template.yaml

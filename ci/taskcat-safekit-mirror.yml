@@ -30,7 +30,7 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-mirror.template
+    template_file: safekit-mirror.template.yaml
   mirror-Windows:
     parameter_input: mirror-Windows.json
     regions:
@@ -42,4 +42,4 @@ tests:
     - us-east-2
     - us-west-1
     - us-west-2
-    template_file: safekit-mirror.template
+    template_file: safekit-mirror.template.yaml
