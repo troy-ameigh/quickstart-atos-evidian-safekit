@@ -19,24 +19,23 @@ global:
   - us-west-2
   reporting: true
 tests:
-  json-master:
-    parameter_input: workload-master.json
+  mirror-Linux:
+    parameter_input: mirror-Linux.json
     regions:
-    - ap-northeast-1
-    - ap-northeast-2
-    - ap-south-1
-    - ap-southeast-1
-    - ap-southeast-2
-    - ca-central-1
-    - eu-central-1
-    template_file: workload-json-master.template.yaml
-  yaml-master:
-    parameter_input: workload-master.json
+      - us-east-1
+    template_file: safekit-mirror.template.yaml
+  mirror-Windows:
+    parameter_input: mirror-Windows.json
     regions:
-    - eu-west-1
-    - eu-west-2
-    - us-east-1
-    - us-east-2
-    - us-west-1
-    - us-west-2
-    template_file: workload-yaml-master.template.yaml
+      - us-east-2
+    template_file: safekit-mirror.template.yaml
+  farm-Linux:
+    parameter_input: farm-Linux.json
+    regions:
+      - us-west-1
+    template_file: safekit-farm.template.yaml
+  farm-Windows:
+    parameter_input: farm-Windows.json
+    regions:
+      - us-west-1
+    template_file: safekit-farm.template.yaml
