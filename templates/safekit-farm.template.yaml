@@ -30,6 +30,7 @@ Metadata:
           default: AWS Quick Start Configuration
         Parameters:
           - QSS3BucketName
+          - QSS3BucketRegion
           - QSS3KeyPrefix
     ParameterLabels:
       NumberOfInstances:
@@ -54,6 +55,8 @@ Metadata:
         default: Virtual IP Port
       VipCIDR:
         default: Allowed CIDR for Virtual IP
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
       QSS3BucketName:
@@ -90,9 +93,11 @@ Parameters:
     AllowedPattern: .+
     ConstraintDescription: Key Pair Name must not be empty
   CAservPwd:
-    Description: Password for  SafeKit web console certificates
+    Description: Password for SafeKit web console certificates
     Type: String
-    AllowedPattern: .+
+    MinLength: 8
+    NoEcho: true
+    AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
     ConstraintDescription: Safekit certificate server password must not be empty
   OSType:
     AllowedValues:
@@ -105,6 +110,7 @@ Parameters:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
     Description: '0.0.0.0/0 will allow access from ANY IP address'
+    Default: '0.0.0.0/0'
     Type: String
   SafekitModuleName:
     Description: Module name
@@ -127,21 +133,26 @@ Parameters:
     Default: Server
     Type: String
   QSS3BucketName:
-    Default: quickstart-evidian-safekit
+    Default: aws-quickstart
     Description: S3 bucket name for the Quick Start assets. This string can include
       numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
       or end with a hyphen (-).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
       uppercase letters, hyphens (-), and forward slash (/).
-    Default: ''
+    Default: quickstart-evidian-safekit/
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
 Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   LinuxCond: !Equals
     - !Ref 'OSType'
     - Linux
@@ -172,7 +183,11 @@ Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZones: !Join
           - ','
@@ -197,7 +212,11 @@ Resources:
   NetStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-net.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/safekit-net.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VpcId: !GetAtt 'VPCStack.Outputs.VPCID'
         NumberOfInstances: !Ref 'NumberOfInstances'
@@ -264,7 +283,11 @@ Resources:
     DependsOn: WaitCluster
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZone: !Select
           - '0'
@@ -375,7 +398,11 @@ Resources:
     Condition: 2AZCondition
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZone: !Select
           - '1'
@@ -393,7 +420,11 @@ Resources:
     Condition: 3AZCondition
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZone: !Select
           - '2'
@@ -411,7 +442,11 @@ Resources:
     Condition: 4AZCondition
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template'
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/safekit-base-${OSType}.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZone: !Select
           - '3'
