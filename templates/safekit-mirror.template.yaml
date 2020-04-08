@@ -87,7 +87,7 @@ Parameters:
     MinLength: 8
     NoEcho: true
     AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
-    ConstraintDescription: Safekit certificate server password must not be empty
+    ConstraintDescription: Certificate server password must be at least 8 chars long and contain at least one uppercase char and number
   OSType:
     AllowedValues:
       - Linux
