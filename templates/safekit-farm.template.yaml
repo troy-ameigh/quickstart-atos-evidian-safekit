@@ -83,7 +83,7 @@ Parameters:
       - m3.medium
       - m3.large
       - m4.large
-    Default: t2.micro
+    Default: t2.small
     Description: Amazon EC2 instance type.
     Type: String
   KeyPairName:

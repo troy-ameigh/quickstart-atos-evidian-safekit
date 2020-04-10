@@ -72,7 +72,7 @@ Parameters:
       - m3.medium
       - m3.large
       - m4.large
-    Default: t2.micro
+    Default: t2.small
     Description: Amazon EC2 instance type.
     Type: String
   KeyPairName:
@@ -191,7 +191,7 @@ Resources:
     Type: AWS::CloudFormation::WaitCondition
     Properties:
       Handle: !Ref 'WaitClusterHandle'
-      Timeout: '20000'
+      Timeout: '600'
       Count: 1
   WaitConfigHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
@@ -199,7 +199,7 @@ Resources:
     Type: AWS::CloudFormation::WaitCondition
     Properties:
       Handle: !Ref 'WaitConfigHandle'
-      Timeout: '30000'
+      Timeout: '2000'
       Count: 1
   EIP1:
     Type: AWS::EC2::EIP
@@ -266,8 +266,8 @@ Resources:
                 https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-mirror-Linux.xml'
               - !Sub '/opt/safekit/safekit -H "*" -E ${SafekitModuleName}'
               - !Sub '/opt/safekit/safekit prim -m ${SafekitModuleName}'
+              - !Sub '/opt/safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}'
               - !Sub '/opt/safekit/safekit waitstart -m ${SafekitModuleName}'
-              - !Sub '/opt/safekit/safekit -H "${InstanceNamePrefix}2" start -m ${SafekitModuleName}'
           - !Join
             - "\n"
             - - '& mkdir /replicated'
@@ -276,8 +276,8 @@ Resources:
                 https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-mirror-Windows.xml'
               - !Sub '& /safekit/safekit -H "*" -E ${SafekitModuleName}'
               - !Sub '& /safekit/safekit prim -m ${SafekitModuleName}'
+              - !Sub '& /safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}'
               - !Sub '& /safekit/safekit waitstart -m ${SafekitModuleName}'
-              - !Sub '& /safekit/safekit -H "${InstanceNamePrefix}2" start -m ${SafekitModuleName}'
         IpNamesList: !Join
           - ''
           - - "[\n"
@@ -327,7 +327,7 @@ Resources:
           - LinuxCond
           - !Join
             - "\n"
-            - - '#!/bin/bash -ev'
+            - - "#!/bin/bash -ev"
               - mkdir /var/replicated
               - chmod o+rwx /var/replicated
           - !Join
