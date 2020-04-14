@@ -86,7 +86,7 @@ Mappings:
     sa-east-1:
       WS2016FULLBASE: ami-05c6c992668058be2
     us-east-1:
-      WS2016FULLBASE: ami-0bf148826ef491d16
+      WS2016FULLBASE: ami-09d496c26aa745869
     us-east-2:
       WS2016FULLBASE: ami-08b4a0f6e106c1dba
     us-west-1:
@@ -117,10 +117,7 @@ Resources:
         Fn::Join:
           - ''
           - - "<script>\n"
-            - 'cfn-init.exe -v -s '
-            - !Ref 'AWS::StackName'
-            - ' -r SafeKitServer'
-            - ' --configsets '
+            - !Sub 'cfn-init.exe -v -s ${AWS::StackId} --region ${AWS::Region} -r SafeKitServer --configsets '
             - !If
               - FirstInstance
               - !If
@@ -128,14 +125,13 @@ Resources:
                 - InstallCluster
                 - InstallModule
               - InstallBase
-            - ' --region '
-            - !Ref 'AWS::Region'
             - "\n"
-            - 'cfn-signal.exe '
-            - !Base64
-              Ref: CompletionHandle
+            - !Sub
+              - cfn-signal.exe -e %errorlevel% ${WHUrl}
+              - WHUrl: !Base64
+                  Ref: CompletionHandle
             - "\n"
-            - </script>
+            - "</script>\n"
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
@@ -156,16 +152,16 @@ Resources:
             msi:
               safekit: https://support.evidian.com/solutions/downloads/safekit/cloud/platforms/windows/current_versions/safekit_cloud.msi
           commands:
-            '0-stop':
+            1-stop:
               command: net stop safeadmin
               waitAfterCompletion: '0'
-            1-start:
+            2-start:
               command: net start safeadmin
               waitAfterCompletion: '0'
-            2-firewall:
+            3-firewall:
               command: \safekit\private\bin\firewallcfg add
               waitAfterCompletion: '0'
-            3-caservstart:
+            4-caservstart:
               cwd: \safekit\web\bin
               command: !Sub 'startcaserv.cmd ${CAservPwd}'
         MasterConfig:
@@ -183,14 +179,14 @@ Resources:
             \safekit\web\bin\uploadcerts.ps1:
               content: !Join
                 - "\n"
-                - - cd /safekit/web/bin
+                - - 'cd /safekit/web/bin'
                   - !Sub '& ./initssl sca "/CN=${CertificateCN}"'
                   - !Sub '$userpwd="CA_admin:${CAservPwd}"'
                   - '& /safekit/private/bin/curl.exe -k -u "$userpwd" -X POST -F action=swhttps
                     https://localhost:9001/caserv'
-                  - $cmdip=(Get-Content -Path /safekit/web/conf/cmdaddr.json) | ConvertFrom-Json
-                  - $cmdip | % { if($_){
-                  - $targetip=$_
+                  - "$cmdip=(Get-Content -Path /safekit/web/conf/cmdaddr.json) | ConvertFrom-Json" 
+                  - "$cmdip | % { if($_){"
+                  - "$targetip=$_"
                   - '& /safekit/private/bin/curl.exe -k -u "$userpwd" -X POST -F file=@/safekit/web/conf/cacert.crt
                     -F action=import -F target=T_CA -F add=yes "https://$($targetip):9001/caserv"'
                   - '& /safekit/private/bin/curl.exe -k -u "$userpwd" -X POST -F file=@/safekit/web/conf/cacert.crt
