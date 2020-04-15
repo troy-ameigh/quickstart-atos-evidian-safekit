@@ -33,7 +33,7 @@ Parameters:
     Default: ''
   ConfigScript:
     Type: String
-    Default: "\n"
+    Default: "#\n#\n"
   ConsoleAddrList:
     Type: String
     Default: ''
