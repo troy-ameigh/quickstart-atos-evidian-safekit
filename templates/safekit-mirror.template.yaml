@@ -255,29 +255,31 @@ Resources:
             - </lans></cluster>
         ConfigScript: !If
           - LinuxCond
-          - !Join
-            - "\n"
-            - - '#!/bin/bash -ev'
-              - mkdir /var/replicated
-              - chmod o+rwx /var/replicated
-              - echo "This file is replicated" >  /var/replicated/rep.txt
-              - chmod o+rwx /var/replicated/rep.txt
-              - !Sub 'curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml
-                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-mirror-Linux.xml'
-              - !Sub '/opt/safekit/safekit -H "*" -E ${SafekitModuleName}'
-              - !Sub '/opt/safekit/safekit prim -m ${SafekitModuleName}'
-              - !Sub '/opt/safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}'
-              - !Sub '/opt/safekit/safekit waitstart -m ${SafekitModuleName}'
-          - !Join
-            - "\n"
-            - - '& mkdir /replicated'
-              - '& echo "This file is replicated" >  /replicated/rep.txt'
-              - !Sub '& /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml
-                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-mirror-Windows.xml'
-              - !Sub '& /safekit/safekit -H "*" -E ${SafekitModuleName}'
-              - !Sub '& /safekit/safekit prim -m ${SafekitModuleName}'
-              - !Sub '& /safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}'
-              - !Sub '& /safekit/safekit waitstart -m ${SafekitModuleName}'
+          - !Sub
+            - |
+              #!/bin/bash -ev
+              mkdir /var/replicated
+              chmod o+rwx /var/replicated
+              echo "This file is replicated" >  /var/replicated/rep.txt
+              chmod o+rwx /var/replicated/rep.txt
+              curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-mirror-Linux.xml
+              /opt/safekit/safekit -H "*" -E ${SafekitModuleName}
+              /opt/safekit/safekit prim -m ${SafekitModuleName}
+              /opt/safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}
+              /opt/safekit/safekit waitstart -m ${SafekitModuleName}
+            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+          - !Sub
+            - |
+              & mkdir /replicated
+              & echo "This file is replicated" >  /replicated/rep.txt
+              & /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-mirror-Windows.xml
+              & /safekit/safekit -H "*" -E ${SafekitModuleName}
+              & /safekit/safekit prim -m ${SafekitModuleName}
+              & /safekit/safekit -H "${InstanceNamePrefix}2" second -m ${SafekitModuleName}
+              & /safekit/safekit waitstart -m ${SafekitModuleName}
+            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         IpNamesList: !Join
           - ''
           - - "[\n"

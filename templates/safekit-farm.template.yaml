@@ -341,19 +341,21 @@ Resources:
             - </lans></cluster>
         ConfigScript: !If
           - LinuxCond
-          - !Join
-            - "\n"
-            - - '#!/bin/bash -ev'
-              - !Sub 'curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml
-                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
-              - !Sub '/opt/safekit/safekit -H "*" -E ${SafekitModuleName}'
-              - !Sub '/opt/safekit/safekit -H "*" start -m ${SafekitModuleName}'
-          - !Join
-            - "\n"
-            - - !Sub '& /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml
-                https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
-              - !Sub '& /safekit/safekit -H "*" -E ${SafekitModuleName}'
-              - !Sub '& /safekit/safekit -H "*" start -m ${SafekitModuleName}'
+          - !Sub
+            - |
+              #!/bin/bash -ev
+              curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml
+              /opt/safekit/safekit -H "*" -E ${SafekitModuleName}
+              /opt/safekit/safekit -H "*" start -m ${SafekitModuleName}
+            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+          - !Sub
+            - |
+              & /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml
+              & /safekit/safekit -H "*" -E ${SafekitModuleName}
+              & /safekit/safekit -H "*" start -m ${SafekitModuleName}
+            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         IpNamesList: !Join
           - ''
           - - "[\n"

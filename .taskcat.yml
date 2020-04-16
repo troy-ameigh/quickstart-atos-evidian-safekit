@@ -40,6 +40,7 @@ tests:
       OSType: Windows
       RemoteAccessCIDR: 0.0.0.0/0
       QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
     regions:
     - us-east-2
@@ -53,6 +54,7 @@ tests:
       OSType: Linux
       RemoteAccessCIDR: 0.0.0.0/0
       QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
     regions:
     - us-west-2
@@ -66,6 +68,7 @@ tests:
       OSType: Windows
       RemoteAccessCIDR: 0.0.0.0/0
       QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
     regions:
     - us-west-1
