@@ -300,6 +300,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}1'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        PrivateAddr: '10.0.1.10'
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
         CompletionHandle: !Ref 'WaitConfigHandle'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/farm.safe'
@@ -416,6 +417,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}2'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+        PrivateAddr: '10.0.2.10'
         EIPAllocationId: !GetAtt 'EIP2.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
   Instance3Stack:
@@ -438,6 +440,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}3'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
+        PrivateAddr: '10.0.3.10'
         EIPAllocationId: !GetAtt 'EIP3.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
   Instance4Stack:
@@ -460,6 +463,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}4'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
+        PrivateAddr: '10.0.4.10'
         EIPAllocationId: !GetAtt 'EIP4.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
 Outputs:

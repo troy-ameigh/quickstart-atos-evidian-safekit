@@ -7,6 +7,9 @@ Parameters:
   PublicSubnet:
     Description: ID of the Public Subnet
     Type: String
+  PrivateAddr:
+    Description: Instance Private Address
+    Type: String
   EIPAllocationId:
     Description: AllocationId of the EIP to associate with this Instance
     Type: String
@@ -171,7 +174,7 @@ Resources:
       NetworkInterfaces:
         - DeviceIndex: '0'
           SubnetId: !Ref 'PublicSubnet'
-          PrivateIpAddress: !Sub '10.0.${InstanceNum}.10'
+          PrivateIpAddress: !Ref 'PrivateAddr'
           GroupSet:
             - !Ref 'SecurityGroup'
       UserData: !Base64
