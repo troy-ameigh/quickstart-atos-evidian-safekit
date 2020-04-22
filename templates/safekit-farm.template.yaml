@@ -266,7 +266,7 @@ Resources:
     Type: AWS::CloudFormation::WaitCondition
     Properties:
       Handle: !Ref 'WaitClusterHandle'
-      Timeout: '10000'
+      Timeout: '3000'
       Count: !FindInMap
         - InstancesMap
         - !Ref 'NumberOfInstances'
@@ -277,7 +277,7 @@ Resources:
     Type: AWS::CloudFormation::WaitCondition
     Properties:
       Handle: !Ref 'WaitConfigHandle'
-      Timeout: '20000'
+      Timeout: '6000'
       Count: 1
   Instance1Stack:
     DependsOn: WaitCluster

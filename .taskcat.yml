@@ -32,7 +32,7 @@ tests:
     - us-east-1
     s3_bucket: ''
     template: templates/safekit-mirror.template.yaml
-  quickstart-evidian-safekit-mirror-Winmdows:
+  quickstart-evidian-safekit-mirror-Windows:
     parameters:
       AvailabilityZones: $[alfred_getaz_2]
       KeyPairName: $[taskcat_getkeypair]
@@ -60,7 +60,7 @@ tests:
     - us-west-2
     s3_bucket: ''
     template: templates/safekit-farm.template.yaml
-  quickstart-evidian-safekit-farm-Winmdows:
+  quickstart-evidian-safekit-farm-Windows:
     parameters:
       AvailabilityZones: $[alfred_getaz_2]
       KeyPairName: $[taskcat_getkeypair]
