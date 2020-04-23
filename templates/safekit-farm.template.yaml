@@ -380,15 +380,15 @@ Resources:
           - - "[\n"
             - !If
               - 2AZCondition
-              - "\"${NetStack.Outputs.PrivateIp2}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp2}\",\n"
               - ''
             - !If
               - 3AZCondition
-              - "\"${NetStack.Outputs.PrivateIp3}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp3}\",\n"
               - ''
             - !If
               - 4AZCondition
-              - "\"${NetStack.Outputs.PrivateIp4}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp4}\",\n"
               - ''
             - "null\n]"
   Instance2Stack:
