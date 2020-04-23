@@ -216,14 +216,22 @@ Resources:
         VipPort: !Ref 'VipPort'
         HealthURL: !Sub '/var/modules/${SafekitModuleName}/ready.txt'
         PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
-        PrivateIp1 : '10.0.128.10'
+        PrivateIp1 : !Sub
+          - '${A}.${B}.${C}.10'
+          - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
         PublicSubnet2ID: !If
           - 2AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
           - ''
         PrivateIp2: !If
           - 2AZCondition
-          - '10.0.144.10'
+          - !Sub
+            - '${A}.${B}.${C}.10'
+            - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+              B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+              C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
           - ''
         PublicSubnet3ID: !If
           - 3AZCondition
@@ -231,7 +239,11 @@ Resources:
           - ''
         PrivateIp3: !If
           - 3AZCondition
-          - '10.0.160.10'
+          - !Sub
+            - '${A}.${B}.${C}.10'
+            - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
+              B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
+              C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
           - ''
         PublicSubnet4ID: !If
           - 4AZCondition
@@ -239,7 +251,11 @@ Resources:
           - ''
         PrivateIp4: !If
           - 4AZCondition
-          - '10.0.176.10'
+          - !Sub
+            - '${A}.${B}.${C}.10'
+            - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
+              B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
+              C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
           - ''
   EIP1:
     Type: AWS::EC2::EIP

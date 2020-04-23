@@ -182,9 +182,17 @@ Resources:
         VipPort: !Ref 'VipPort'
         HealthURL: !Sub '/var/modules/${SafekitModuleName}/ready.txt'
         PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
-        PrivateIp1 : '10.0.128.10'
+        PrivateIp1 : !Sub
+          - '${A}.${B}.${C}.10'
+          - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
         PublicSubnet2ID: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
-        PrivateIp2 : '10.0.144.10'
+        PrivateIp2 : !Sub
+          - '${A}.${B}.${C}.10'
+          - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+            B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+            C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
   WaitClusterHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
   WaitCluster:
