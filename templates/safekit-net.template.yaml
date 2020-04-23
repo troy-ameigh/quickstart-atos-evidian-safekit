@@ -5,6 +5,10 @@ Parameters:
   VpcId:
     Description: Id of VPC
     Type: AWS::EC2::VPC::Id
+  VPCCIDR: 
+    Description: CIDR block of VPC
+    Type: String
+    Default: ''
   NumberOfInstances:
     AllowedValues:
       - '2'
@@ -43,18 +47,30 @@ Parameters:
     Description: ID of the Public Subnet 1
     Type: String
     Default: ''
+  PrivateIp1: 
+    Type: String
+    Default: ''
   PublicSubnet2ID:
     Description: ID of the Public Subnet 2
+    Type: String
+    Default: ''
+  PrivateIp2: 
     Type: String
     Default: ''
   PublicSubnet3ID:
     Description: ID of the Public Subnet 3
     Type: String
     Default: '-'
+  PrivateIp3: 
+    Type: String
+    Default: '-'
   PublicSubnet4ID:
     Description: ID of the Public Subnet 4
     Type: String
     Default: '-'
+  PrivateIp4: 
+    Type: String
+    Default: ''
 Conditions:
   VipPortCond: !Not
     - !Equals
@@ -106,15 +122,15 @@ Resources:
         - IpProtocol: tcp
           FromPort: 0
           ToPort: 65535
-          CidrIp: 10.0.0.0/16
+          CidrIp: !Ref 'VPCCIDR'
         - IpProtocol: udp
           FromPort: 0
           ToPort: 65535
-          CidrIp: 10.0.0.0/16
+          CidrIp: !Ref 'VPCCIDR'
         - IpProtocol: icmp
           FromPort: -1
           ToPort: -1
-          CidrIp: 10.0.0.0/16
+          CidrIp: !Ref 'VPCCIDR'
   LoadBalancerAppli:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -154,18 +170,18 @@ Resources:
       Protocol: TCP
       TargetType: ip
       Targets:
-        - Id: 10.0.1.10
+        - Id: !Ref 'PrivateIp1'
         - !If
           - 2AZCondition
-          - Id: 10.0.2.10
+          - Id: !Ref 'PrivateIp2'
           - !Ref 'AWS::NoValue'
         - !If
           - 3AZCondition
-          - Id: 10.0.3.10
+          - Id: !Ref 'PrivateIp3'
           - !Ref 'AWS::NoValue'
         - !If
           - 4AZCondition
-          - Id: 10.0.4.10
+          - Id: !Ref 'PrivateIp4'
           - !Ref 'AWS::NoValue'
       HealthCheckIntervalSeconds: 10
       HealthyThresholdCount: 2
@@ -180,3 +196,14 @@ Outputs:
   DNSName:
     Description: LoadBalancer DNS Name
     Value: !GetAtt 'LoadBalancerAppli.DNSName'
+  PrivateIp1:
+    Value: !Ref 'PrivateIp1'
+  PrivateIp2:
+    Condition: 2AZCondition
+    Value: !Ref 'PrivateIp2'
+  PrivateIp3:
+    Condition: 3AZCondition
+    Value: !Ref 'PrivateIp3'
+  PrivateIp4:
+    Condition: 4AZCondition
+    Value: !Ref 'PrivateIp4'

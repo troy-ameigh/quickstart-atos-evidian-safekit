@@ -194,20 +194,6 @@ Resources:
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
         NumberOfAZs: !Ref 'NumberOfInstances'
-        VPCCIDR: 10.0.0.0/16
-        PublicSubnet1CIDR: 10.0.1.0/24
-        PublicSubnet2CIDR: !If
-          - 2AZCondition
-          - 10.0.2.0/24
-          - !Ref 'AWS::NoValue'
-        PublicSubnet3CIDR: !If
-          - 3AZCondition
-          - 10.0.3.0/24
-          - !Ref 'AWS::NoValue'
-        PublicSubnet4CIDR: !If
-          - 4AZCondition
-          - 10.0.4.0/24
-          - !Ref 'AWS::NoValue'
         CreatePrivateSubnets: 'false'
   NetStack:
     Type: AWS::CloudFormation::Stack
@@ -219,6 +205,7 @@ Resources:
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VpcId: !GetAtt 'VPCStack.Outputs.VPCID'
+        VPCCIDR: !GetAtt 'VPCStack.Outputs.VPCCIDR'
         NumberOfInstances: !Ref 'NumberOfInstances'
         RemoteAccessCIDR: !Ref 'RemoteAccessCIDR'
         RemoteAccessPort: !If
@@ -229,17 +216,30 @@ Resources:
         VipPort: !Ref 'VipPort'
         HealthURL: !Sub '/var/modules/${SafekitModuleName}/ready.txt'
         PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        PrivateIp1 : '10.0.128.10'
         PublicSubnet2ID: !If
           - 2AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+          - ''
+        PrivateIp2: !If
+          - 2AZCondition
+          - '10.0.144.10'
           - ''
         PublicSubnet3ID: !If
           - 3AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
           - ''
+        PrivateIp3: !If
+          - 3AZCondition
+          - '10.0.160.10'
+          - ''
         PublicSubnet4ID: !If
           - 4AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
+          - ''
+        PrivateIp4: !If
+          - 4AZCondition
+          - '10.0.176.10'
           - ''
   EIP1:
     Type: AWS::EC2::EIP
@@ -300,7 +300,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}1'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
-        PrivateAddr: '10.0.1.10'
+        PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp1'
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
         CompletionHandle: !Ref 'WaitConfigHandle'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/farm.safe'
@@ -325,18 +325,18 @@ Resources:
               - ''
             - </lan>
             - <lan name="default" console="on" command="on" framework="on">
-            - !Sub '<node name="${InstanceNamePrefix}1" addr="10.0.1.10"/>'
+            - !Sub '<node name="${InstanceNamePrefix}1" addr="${NetStack.Outputs.PrivateIp1}"/>'
             - !If
               - 2AZCondition
-              - !Sub '<node name="${InstanceNamePrefix}2" addr="10.0.2.10"/>'
+              - !Sub '<node name="${InstanceNamePrefix}2" addr="${NetStack.Outputs.PrivateIp2}"/>'
               - ''
             - !If
               - 3AZCondition
-              - !Sub '<node name="${InstanceNamePrefix}3" addr="10.0.3.10"/>'
+              - !Sub '<node name="${InstanceNamePrefix}3" addr="${NetStack.Outputs.PrivateIp3}"/>'
               - ''
             - !If
               - 4AZCondition
-              - !Sub '<node name="${InstanceNamePrefix}4" addr="10.0.4.10"/>'
+              - !Sub '<node name="${InstanceNamePrefix}4" addr="${NetStack.Outputs.PrivateIp4}"/>'
               - ''
             - </lan>
             - </lans></cluster>
@@ -357,28 +357,22 @@ Resources:
               & /safekit/safekit -H "*" start -m ${SafekitModuleName}
             - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
               S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-        IpNamesList: !Join
-          - ''
-          - - "[\n"
-            - '"'
-            - !GetAtt 'NetStack.Outputs.DNSName'
-            - "\",\n"
-            - "null\n]"
+        IpNamesList: !Sub "[\n\"${NetStack.Outputs.DNSName}\",\nnull\n]"
         ConsoleAddrList: !Join
           - ''
           - - "[\n"
-            - !Sub "\"10.0.1.10\",\n\"${EIP1}\",\n"
+            - !Sub "\"${NetStack.Outputs.PrivateIp1}\",\n\"${EIP1}\",\n"
             - !If
               - 2AZCondition
-              - !Sub "\"10.0.2.10\",\n\"${EIP2}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp2}\",\n\"${EIP2}\",\n"
               - ''
             - !If
               - 3AZCondition
-              - !Sub "\"10.0.3.10\",\n\"${EIP3}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp3}\",\n\"${EIP3}\",\n"
               - ''
             - !If
               - 4AZCondition
-              - !Sub "\"10.0.4.10\",\n\"${EIP4}\",\n"
+              - !Sub "\"${NetStack.Outputs.PrivateIp4}\",\n\"${EIP4}\",\n"
               - ''
             - "null\n]"
         CommandAddrList: !Join
@@ -386,15 +380,15 @@ Resources:
           - - "[\n"
             - !If
               - 2AZCondition
-              - "\"10.0.2.10\",\n"
+              - "\"${NetStack.Outputs.PrivateIp2}\",\n"
               - ''
             - !If
               - 3AZCondition
-              - "\"10.0.3.10\",\n"
+              - "\"${NetStack.Outputs.PrivateIp3}\",\n"
               - ''
             - !If
               - 4AZCondition
-              - "\"10.0.4.10\",\n"
+              - "\"${NetStack.Outputs.PrivateIp4}\",\n"
               - ''
             - "null\n]"
   Instance2Stack:
@@ -417,7 +411,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}2'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
-        PrivateAddr: '10.0.2.10'
+        PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp2'
         EIPAllocationId: !GetAtt 'EIP2.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
   Instance3Stack:
@@ -440,7 +434,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}3'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
-        PrivateAddr: '10.0.3.10'
+        PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp3'
         EIPAllocationId: !GetAtt 'EIP3.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
   Instance4Stack:
@@ -463,7 +457,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}4'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
-        PrivateAddr: '10.0.4.10'
+        PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp4'
         EIPAllocationId: !GetAtt 'EIP4.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
 Outputs:
