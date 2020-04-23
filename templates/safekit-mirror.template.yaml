@@ -160,9 +160,6 @@ Resources:
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
         NumberOfAZs: '2'
-        VPCCIDR: 10.0.0.0/16
-        PublicSubnet1CIDR: 10.0.1.0/24
-        PublicSubnet2CIDR: 10.0.2.0/24
         CreatePrivateSubnets: 'false'
   NetStack:
     Type: AWS::CloudFormation::Stack
@@ -174,6 +171,7 @@ Resources:
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VpcId: !GetAtt 'VPCStack.Outputs.VPCID'
+        VPCCIDR: !GetAtt 'VPCStack.Outputs.VPCCIDR'
         NumberOfInstances: '2'
         RemoteAccessCIDR: !Ref 'RemoteAccessCIDR'
         RemoteAccessPort: !If
@@ -184,7 +182,17 @@ Resources:
         VipPort: !Ref 'VipPort'
         HealthURL: !Sub '/var/modules/${SafekitModuleName}/ready.txt'
         PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        PrivateIp1 : !Sub
+          - '${A}.${B}.${C}.10'
+          - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
+            C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet1CIDR' ]]
         PublicSubnet2ID: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+        PrivateIp2 : !Sub
+          - '${A}.${B}.${C}.10'
+          - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+            B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
+            C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
   WaitClusterHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
   WaitCluster:
@@ -230,6 +238,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}1'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        PrivateAddr:  !GetAtt 'NetStack.Outputs.PrivateIp1'
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
         CompletionHandle: !Ref 'WaitConfigHandle'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/mirror.safe'
@@ -240,17 +249,13 @@ Resources:
             - "<cluster><lans>\n"
             - "<lan name=\"console\" console=\"on\" command=\"off\" framework=\"off\"\
               \ >\n"
-            - !Sub '<node name="${InstanceNamePrefix}1" addr="'
-            - !Ref 'EIP1'
-            - "\" />\n"
-            - !Sub '<node name="${InstanceNamePrefix}2" addr="'
-            - !Ref 'EIP2'
-            - "\" />\n"
+            - !Sub '<node name="${InstanceNamePrefix}1" addr="${EIP1}" />\n'
+            - !Sub '<node name="${InstanceNamePrefix}2" addr="${EIP2}" />\n'
             - "</lan>\n"
             - "<lan name=\"default\" console=\"on\" command=\"on\" framework=\"on\"\
               \ >\n"
-            - !Sub "<node name=\"${InstanceNamePrefix}1\" addr=\"10.0.1.10\" />\n"
-            - !Sub "<node name=\"${InstanceNamePrefix}2\" addr=\"10.0.2.10\" />\n"
+            - !Sub "<node name=\"${InstanceNamePrefix}1\" addr=\"${NetStack.Outputs.PrivateIp1}\" />\n"
+            - !Sub "<node name=\"${InstanceNamePrefix}2\" addr=\"${NetStack.Outputs.PrivateIp2}\" />\n"
             - "</lan>\n"
             - </lans></cluster>
         ConfigScript: !If
@@ -280,30 +285,9 @@ Resources:
               & /safekit/safekit waitstart -m ${SafekitModuleName}
             - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
               S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-        IpNamesList: !Join
-          - ''
-          - - "[\n"
-            - '"'
-            - !GetAtt 'NetStack.Outputs.DNSName'
-            - "\",\n"
-            - "null\n]"
-        ConsoleAddrList: !Join
-          - ''
-          - - "[\n"
-            - "\"10.0.1.10\",\n"
-            - '"'
-            - !Ref 'EIP1'
-            - "\",\n"
-            - "\"10.0.2.10\",\n"
-            - '"'
-            - !Ref 'EIP2'
-            - "\",\n"
-            - "null\n]"
-        CommandAddrList: !Join
-          - ''
-          - - "[\n"
-            - "\"10.0.2.10\",\n"
-            - "null\n]"
+        IpNamesList: !Sub "[\n\"${NetStack.Outputs.DNSName}\",\nnull\n]"
+        ConsoleAddrList: !Sub "[\n\"${NetStack.Outputs.PrivateIp1}\",\"${EIP1}\",\n\"${NetStack.Outputs.PrivateIp2}\",\"${EIP2}\",\nnull\n]"
+        CommandAddrList: !Sub "[\n\"${NetStack.Outputs.PrivateIp2}\",\nnull\n]"
   Instance2Stack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -323,6 +307,7 @@ Resources:
         InstanceName: !Sub '${InstanceNamePrefix}2'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
+        PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp2'
         EIPAllocationId: !GetAtt 'EIP2.AllocationId'
         CompletionHandle: !Ref 'WaitClusterHandle'
         ConfigScript: !If
