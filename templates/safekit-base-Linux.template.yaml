@@ -23,13 +23,15 @@ Parameters:
     Type: String
   InstanceName:
     Type: String
+  StackInstanceProfile:
+    Type: String
+  StackInstanceRole:
+    Type: String
   KeyPairName:
     Description: Public/private key pairs allow you to securely connect to your EC2
       instance after it launches.
     Type: AWS::EC2::KeyPair::KeyName
   CAservPwd:
-    Type: String
-  CompletionHandle:
     Type: String
   ClusterFile:
     Type: String
@@ -53,7 +55,7 @@ Parameters:
     Default: none
     Type: String
   CertificateCN:
-    Default: SafeKit
+    Default: "SafeKit"
     Type: String
   QSS3BucketName:
     AllowedPattern: '^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$'
@@ -90,6 +92,9 @@ Conditions:
   ModuleNOK: !Equals
     - !Ref 'SafekitModuleName'
     - none
+  ModuleCond: !Equals
+    - !Ref 'SafekitModuleName'
+    - farm
 Mappings:
   AWSAMIRegionMap:
     eu-north-1:
@@ -125,38 +130,6 @@ Mappings:
     us-west-2:
       AMZNLINUX2: ami-0d6621c01e8c2de2c
 Resources:
-  StackInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: AccessToS3Bucket
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                Resource:
-                  - !Sub
-                    - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
-                    - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-  StackInstanceProfile:
-      Type: AWS::IAM::InstanceProfile
-      DependsOn: StackInstanceRole
-      Properties:
-        Path: /
-        Roles:
-          - !Ref StackInstanceRole
   SafeKitServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -198,9 +171,24 @@ Resources:
               - InstallBase
             - !Sub ' --region ${AWS::Region}'
             - "\n"
-            - !Sub '/opt/aws/bin/cfn-signal "${CompletionHandle}" '
+              # Signal the status from cfn-init
+            - '/opt/aws/bin/cfn-signal -e $? '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource SafeKitServer'
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
             - "\n"
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT60M
     Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'StackInstanceRole'
+          buckets: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       AWS::CloudFormation::Init:
         configSets:
           InstallBase:
@@ -222,6 +210,20 @@ Resources:
               command: !Sub './startcaserv ${CAservPwd}'
         MasterConfig:
           files:
+            /tmp/userconfig.xml: !If
+              - ModuleCond
+              - source:
+                  !Sub
+                    - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
+                    - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+                      S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+                authentication: S3AccessCreds
+              - source:
+                  !Sub
+                    - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-mirror-Linux.xml'
+                    - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+                      S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+                authentication: S3AccessCreds
             /var/safekit/cluster/cluster.xml:
               content: !Ref 'ClusterFile'
               mode: '000664'

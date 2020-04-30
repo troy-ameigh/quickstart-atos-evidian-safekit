@@ -71,6 +71,9 @@ Parameters:
   PrivateIp4: 
     Type: String
     Default: ''
+  PublicSubnetRouteTable:
+    Type: String
+    Default: ''
 Conditions:
   VipPortCond: !Not
     - !Equals

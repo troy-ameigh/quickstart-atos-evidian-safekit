@@ -224,7 +224,7 @@ Resources:
         PublicSubnet2ID: !If
           - 2AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
-          - ''
+          - !Ref 'AWS::NoValue'
         PrivateIp2: !If
           - 2AZCondition
           - !Sub
@@ -232,11 +232,11 @@ Resources:
             - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
               B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
               C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet2CIDR' ]]
-          - ''
+          - !Ref 'AWS::NoValue'
         PublicSubnet3ID: !If
           - 3AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
-          - ''
+          - !Ref 'AWS::NoValue'
         PrivateIp3: !If
           - 3AZCondition
           - !Sub
@@ -244,11 +244,11 @@ Resources:
             - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
               B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
               C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet3CIDR' ]]
-          - ''
+          - !Ref 'AWS::NoValue'
         PublicSubnet4ID: !If
           - 4AZCondition
           - !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
-          - ''
+          - !Ref 'AWS::NoValue'
         PrivateIp4: !If
           - 4AZCondition
           - !Sub
@@ -256,7 +256,7 @@ Resources:
             - A: !Select [0, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
               B: !Select [1, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
               C: !Select [2, !Split [".", !GetAtt 'VPCStack.Outputs.PublicSubnet4CIDR' ]]
-          - ''
+          - !Ref 'AWS::NoValue'
   EIP1:
     Type: AWS::EC2::EIP
     Properties:
@@ -276,28 +276,46 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
-  WaitClusterHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-  WaitCluster:
-    Type: AWS::CloudFormation::WaitCondition
+  StackInstanceRole:
+    Type: AWS::IAM::Role
     Properties:
-      Handle: !Ref 'WaitClusterHandle'
-      Timeout: '3000'
-      Count: !FindInMap
-        - InstancesMap
-        - !Ref 'NumberOfInstances'
-        - Wait
-  WaitConfigHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-  WaitConfig:
-    Type: AWS::CloudFormation::WaitCondition
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AccessToS3Bucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                  - s3:*Object
+                Resource:
+                  - !Sub
+                    - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
+                    - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+  StackInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    DependsOn: StackInstanceRole
     Properties:
-      Handle: !Ref 'WaitConfigHandle'
-      Timeout: '6000'
-      Count: 1
+      Path: /
+      Roles:
+        - !Ref StackInstanceRole
   Instance1Stack:
-    DependsOn: WaitCluster
     Type: AWS::CloudFormation::Stack
+    Metadata:
+      PseudoDependsOn:
+        - !If [2AZCondition, !Ref 'Instance2Stack', !Ref 'AWS::NoValue']
+        - !If [3AZCondition, !Ref 'Instance2Stack', !Ref 'AWS::NoValue']
+        - !If [4AZCondition, !Ref 'Instance2Stack', !Ref 'AWS::NoValue']
     Properties:
       TemplateURL:
         !Sub
@@ -309,16 +327,22 @@ Resources:
           - '0'
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
+        QSS3BucketName: !Ref 'QSS3BucketName'
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
+        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
         CAservPwd: !Ref 'CAservPwd'
-        CertificateCN: !Sub 'SafeKit CA ${AWS::StackName} Stack'
+        CertificateCN: !Sub
+          - 'SafeKit CA ${X} Stack'
+          - X: !Select [2, !Split ["/", !Ref 'AWS::StackId' ]]
         InstanceType: !Ref 'InstanceType'
         InstanceNum: '1'
         InstanceName: !Sub '${InstanceNamePrefix}1'
+        StackInstanceProfile: !Ref 'StackInstanceProfile'
+        StackInstanceRole: !Ref 'StackInstanceRole'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
         PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp1'
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
-        CompletionHandle: !Ref 'WaitConfigHandle'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/farm.safe'
         SafekitModuleName: !Ref 'SafekitModuleName'
         ClusterFile: !Join
@@ -330,30 +354,30 @@ Resources:
             - !If
               - 2AZCondition
               - !Sub '<node name="${InstanceNamePrefix}2" addr="${EIP2}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 3AZCondition
               - !Sub '<node name="${InstanceNamePrefix}3" addr="${EIP3}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 4AZCondition
               - !Sub '<node name="${InstanceNamePrefix}4" addr="${EIP4}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - </lan>
             - <lan name="default" console="on" command="on" framework="on">
             - !Sub '<node name="${InstanceNamePrefix}1" addr="${NetStack.Outputs.PrivateIp1}"/>'
             - !If
               - 2AZCondition
               - !Sub '<node name="${InstanceNamePrefix}2" addr="${NetStack.Outputs.PrivateIp2}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 3AZCondition
               - !Sub '<node name="${InstanceNamePrefix}3" addr="${NetStack.Outputs.PrivateIp3}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 4AZCondition
               - !Sub '<node name="${InstanceNamePrefix}4" addr="${NetStack.Outputs.PrivateIp4}"/>'
-              - ''
+              - !Ref 'AWS::NoValue'
             - </lan>
             - </lans></cluster>
         ConfigScript: !If
@@ -361,18 +385,16 @@ Resources:
           - !Sub
             - |
               #!/bin/bash -ev
-              curl -o /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml
+              mv /tmp/userconfig.xml /opt/safekit/modules/${SafekitModuleName}/conf/userconfig.xml
               /opt/safekit/safekit -H "*" -E ${SafekitModuleName}
               /opt/safekit/safekit -H "*" start -m ${SafekitModuleName}
-            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+            - SafekitModuleName: !Ref 'SafekitModuleName'
           - !Sub
             - |
-              & /safekit/private/bin/curl.exe -k -o /safekit/modules/${SafekitModuleName}/conf/userconfig.xml https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml
+              & move-item -path \safekit\var\tmp\userconfig.xml -destination \safekit\modules\${SafekitModuleName}\conf\userconfig.xml
               & /safekit/safekit -H "*" -E ${SafekitModuleName}
               & /safekit/safekit -H "*" start -m ${SafekitModuleName}
-            - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-              S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+            - SafekitModuleName: !Ref 'SafekitModuleName'
         IpNamesList: !Sub "[\n\"${NetStack.Outputs.DNSName}\",\nnull\n]"
         ConsoleAddrList: !Join
           - ''
@@ -381,15 +403,15 @@ Resources:
             - !If
               - 2AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp2}\",\n\"${EIP2}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 3AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp3}\",\n\"${EIP3}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 4AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp4}\",\n\"${EIP4}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - "null\n]"
         CommandAddrList: !Join
           - ''
@@ -397,18 +419,22 @@ Resources:
             - !If
               - 2AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp2}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 3AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp3}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - !If
               - 4AZCondition
               - !Sub "\"${NetStack.Outputs.PrivateIp4}\",\n"
-              - ''
+              - !Ref 'AWS::NoValue'
             - "null\n]"
   Instance2Stack:
     Condition: 2AZCondition
+    Metadata:
+      PseudoDependsOn:
+        - !If [3AZCondition, !Ref 'Instance3Stack', !Ref 'AWS::NoValue']
+        - !If [4AZCondition, !Ref 'Instance3Stack', !Ref 'AWS::NoValue']
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
@@ -421,18 +447,25 @@ Resources:
           - '1'
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
+        QSS3BucketName: !Ref 'QSS3BucketName'
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
+        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
         CAservPwd: !Ref 'CAservPwd'
         InstanceType: !Ref 'InstanceType'
         InstanceNum: '2'
         InstanceName: !Sub '${InstanceNamePrefix}2'
+        StackInstanceProfile: !Ref 'StackInstanceProfile'
+        StackInstanceRole: !Ref 'StackInstanceRole'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
         PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp2'
         EIPAllocationId: !GetAtt 'EIP2.AllocationId'
-        CompletionHandle: !Ref 'WaitClusterHandle'
   Instance3Stack:
     Condition: 3AZCondition
     Type: AWS::CloudFormation::Stack
+    Metadata:
+      PseudoDependsOn:
+        - !If [4AZCondition, !Ref 'Instance4Stack', !Ref 'AWS::NoValue']
     Properties:
       TemplateURL:
         !Sub
@@ -444,15 +477,19 @@ Resources:
           - '2'
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
+        QSS3BucketName: !Ref 'QSS3BucketName'
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
+        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
         CAservPwd: !Ref 'CAservPwd'
         InstanceType: !Ref 'InstanceType'
         InstanceNum: '3'
         InstanceName: !Sub '${InstanceNamePrefix}3'
+        StackInstanceProfile: !Ref 'StackInstanceProfile'
+        StackInstanceRole: !Ref 'StackInstanceRole'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
         PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp3'
         EIPAllocationId: !GetAtt 'EIP3.AllocationId'
-        CompletionHandle: !Ref 'WaitClusterHandle'
   Instance4Stack:
     Condition: 4AZCondition
     Type: AWS::CloudFormation::Stack
@@ -467,15 +504,19 @@ Resources:
           - '3'
           - !Ref 'AvailabilityZones'
         KeyPairName: !Ref 'KeyPairName'
+        QSS3BucketName: !Ref 'QSS3BucketName'
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
+        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
         CAservPwd: !Ref 'CAservPwd'
         InstanceType: !Ref 'InstanceType'
         InstanceNum: '4'
         InstanceName: !Sub '${InstanceNamePrefix}4'
+        StackInstanceProfile: !Ref 'StackInstanceProfile'
+        StackInstanceRole: !Ref 'StackInstanceRole'
         SecurityGroup: !GetAtt 'NetStack.Outputs.SecurityGroup'
         PublicSubnet: !GetAtt 'VPCStack.Outputs.PublicSubnet4ID'
         PrivateAddr: !GetAtt 'NetStack.Outputs.PrivateIp4'
         EIPAllocationId: !GetAtt 'EIP4.AllocationId'
-        CompletionHandle: !Ref 'WaitClusterHandle'
 Outputs:
   Server1:
     Description: Server 1 IP address
@@ -518,3 +559,6 @@ Outputs:
   FQDN:
     Description: Virtal IP DNS name
     Value: !GetAtt 'NetStack.Outputs.DNSName'
+
+
+
