@@ -345,6 +345,7 @@ Resources:
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/farm.safe'
         SafekitModuleName: !Ref 'SafekitModuleName'
+        Userconfig: 'userconfig-farm.xml'
         ClusterFile: !Join
           - "\n"
           - - <?xml version="1.0" encoding="utf-8"?>
