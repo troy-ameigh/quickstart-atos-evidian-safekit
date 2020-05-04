@@ -266,6 +266,7 @@ Resources:
         EIPAllocationId: !GetAtt 'EIP1.AllocationId'
         SafekitModuleURL: !Sub 'https://support.evidian.com/solutions/downloads/safekit/cloud/application_modules/${OSType}/mirror.safe'
         SafekitModuleName: !Ref 'SafekitModuleName'
+        Userconfig: !If [LinuxCond, 'userconfig-mirror-Linux.xml' , 'userconfig-mirror-Windows.xml']
         ClusterFile: !Join
           - ''
           - - "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

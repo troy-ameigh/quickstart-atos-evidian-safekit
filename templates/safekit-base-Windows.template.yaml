@@ -54,6 +54,9 @@ Parameters:
   SafekitModuleName:
     Default: none
     Type: String
+  Userconfig:
+    Default: none
+    Type: String
   CertificateCN:
     Default: SafeKit
     Type: String
@@ -89,12 +92,6 @@ Conditions:
   FirstInstance: !Equals
     - !Ref 'InstanceNum'
     - '1'
-  ModuleNOK: !Equals
-    - !Ref 'SafekitModuleName'
-    - none
-  ModuleCond: !Equals
-    - !Ref 'SafekitModuleName'
-    - farm
 Mappings:
   AWSAMIRegionMap:
     eu-north-1:
@@ -155,13 +152,7 @@ Resources:
           - ''
           - - "<script>\n"
             - !Sub 'cfn-init.exe -v -s ${AWS::StackId} --region ${AWS::Region} -r SafeKitServer --configsets '
-            - !If
-              - FirstInstance
-              - !If
-                - ModuleNOK
-                - InstallCluster
-                - InstallModule
-              - InstallBase
+            - !If [FirstInstance, InstallModule, InstallBase]
             - "\n"
               # Signal the status from cfn-init
             - 'cfn-signal.exe -e %errorlevel%  '
@@ -187,10 +178,6 @@ Resources:
           InstallBase:
             - SafeKitInstall
             - PostConfig
-          InstallCluster:
-            - SafeKitInstall
-            - MasterConfig
-            - PostConfig
           InstallModule:
             - SafeKitInstall
             - MasterConfig
@@ -215,20 +202,13 @@ Resources:
               command: !Sub 'startcaserv.cmd ${CAservPwd}'
         MasterConfig:
           files:
-            \safekit\var\tmp\userconfig.xml: !If
-              - ModuleCond
-              - source:
-                  !Sub
-                  - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-farm.xml'
-                  - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                    S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-                authentication: S3AccessCreds
-              - source:
-                  !Sub
-                  - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/userconfig-mirror-Windows.xml'
-                  - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-                    S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-                authentication: S3AccessCreds
+            \safekit\var\tmp\userconfig.xml:
+              source:
+                !Sub
+                - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/${Userconfig}'
+                - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+                  S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+              authentication: S3AccessCreds
             \safekit\var\cluster\cluster.xml:
               content: !Ref 'ClusterFile'
             \safekit\web\conf\ipnames.json:
