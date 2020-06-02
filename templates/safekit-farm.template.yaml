@@ -11,6 +11,10 @@ Metadata:
         Parameters:
           - NumberOfInstances
           - AvailabilityZones
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PublicSubnet3CIDR
+          - PublicSubnet4CIDR
           - RemoteAccessCIDR
           - VipCIDR
       - Label:
@@ -37,6 +41,14 @@ Metadata:
         default: Number of Instances
       AvailabilityZones:
         default: Availability Zones
+      PublicSubnet1CIDR:
+        default: Public subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public subnet 2 CIDR
+      PublicSubnet3CIDR:
+        default: Public subnet 3 CIDR
+      PublicSubnet4CIDR:
+        default: Public subnet 4 CIDR
       InstanceType:
         default: Instance Type
       OSType:
@@ -56,7 +68,7 @@ Metadata:
       VipCIDR:
         default: Allowed CIDR for Virtual IP
       QSS3BucketRegion:
-        default: Quick Start S3 bucket region
+        default: Quick Start S3 bucket Region
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
       QSS3BucketName:
@@ -73,6 +85,34 @@ Parameters:
   AvailabilityZones:
     Description: Set as many availability zones as there are instances
     Type: List<AWS::EC2::AvailabilityZone::Name>
+  PublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.128.0/20
+    Description: CIDR block for the public DMZ subnet 1 located in Availability Zone
+      1
+    Type: String
+  PublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.144.0/20
+    Description: CIDR block for the public DMZ subnet 2 located in Availability Zone
+      2
+    Type: String
+  PublicSubnet3CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.160.0/20
+    Description: CIDR block for the public DMZ subnet 3 located in Availability Zone
+      3
+    Type: String
+  PublicSubnet4CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.176.0/20
+    Description: CIDR block for the public DMZ subnet 4 located in Availability Zone
+      4
+    Type: String
   InstanceType:
     AllowedValues:
       - t2.nano
@@ -93,7 +133,7 @@ Parameters:
     AllowedPattern: .+
     ConstraintDescription: Key Pair Name must not be empty
   CAservPwd:
-    Description: Password for SafeKit web console certificates
+    Description: Password for SafeKit web console certificates. Password must be at least 8 chars long and contain at least one uppercase char and number. Password can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
     Type: String
     MinLength: 8
     NoEcho: true
@@ -113,11 +153,13 @@ Parameters:
     Default: '0.0.0.0/0'
     Type: String
   SafekitModuleName:
-    Description: Module name
+    Description: Module name of the SakeKit mode being deployed. This is not editable.
+    AllowedValues:
+      - farm
     Default: farm
     Type: String
   VipPort:
-    Description: Port of the Virtual IP which is load balanced
+    Description: Port of the Virtual IP which is used to load balance the SafeKit farm.
     Type: Number
     Default: 9453
     MinValue: 1
@@ -140,7 +182,7 @@ Parameters:
     Type: String
   QSS3BucketRegion:
     Default: 'us-east-1'
-    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
@@ -192,6 +234,10 @@ Resources:
         AvailabilityZones: !Join
           - ','
           - !Ref 'AvailabilityZones'
+        PublicSubnet1CIDR: !Ref 'PublicSubnet1CIDR'
+        PublicSubnet2CIDR: !Ref 'PublicSubnet2CIDR'
+        PublicSubnet3CIDR: !Ref 'PublicSubnet3CIDR'
+        PublicSubnet4CIDR: !Ref 'PublicSubnet4CIDR'
         KeyPairName: !Ref 'KeyPairName'
         NumberOfAZs: !Ref 'NumberOfInstances'
         CreatePrivateSubnets: 'false'
