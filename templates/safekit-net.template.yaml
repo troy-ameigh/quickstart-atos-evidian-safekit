@@ -20,7 +20,7 @@ Parameters:
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: Enter the CIDR IP range that is permitted to access SafeKit. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    Description: Enter the CIDR IP range that is permitted to access SafeKit Envirnoment. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   RemoteAccessPort:
     Description: Port for romte admin access
@@ -39,8 +39,8 @@ Parameters:
     MaxValue: 49151
   VipCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: Enter the CIDR IP range that is permitted to access SafeKit. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    ConstraintDescription: Allowed CIDR block for external access to SafeKit Web Console.
+    Description: Enter the CIDR IP range that is permitted to access SafeKit Web Console. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   PublicSubnet1ID:
     Description: ID of the Public Subnet 1
