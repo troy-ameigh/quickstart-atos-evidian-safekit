@@ -20,7 +20,7 @@ Parameters:
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: '0.0.0.0/0 will allow access from ANY IP address'
+    Description: Enter the CIDR IP range that is permitted to access SafeKit. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   RemoteAccessPort:
     Description: Port for romte admin access
@@ -40,9 +40,8 @@ Parameters:
   VipCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: '0.0.0.0/0 will allow access from ANY IP address'
+    Description: Enter the CIDR IP range that is permitted to access SafeKit. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
-    Default: '0.0.0.0/0'
   PublicSubnet1ID:
     Description: ID of the Public Subnet 1
     Type: String

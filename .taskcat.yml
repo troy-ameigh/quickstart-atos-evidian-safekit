@@ -25,7 +25,8 @@ tests:
       KeyPairName: $[taskcat_getkeypair]
       CAservPwd: $[taskcat_genpass_12A]
       OSType: Linux
-      RemoteAccessCIDR: 0.0.0.0/0
+      VipCIDR: 10.0.6.0/24
+      RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
@@ -39,7 +40,8 @@ tests:
       KeyPairName: $[taskcat_getkeypair]
       CAservPwd: $[taskcat_genpass_12A]
       OSType: Windows
-      RemoteAccessCIDR: 0.0.0.0/0
+      VipCIDR: 10.0.6.0/24
+      RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
@@ -54,7 +56,8 @@ tests:
       CAservPwd: $[taskcat_genpass_12A]
       OSType: Linux
       NumberOfInstances: 4
-      RemoteAccessCIDR: 0.0.0.0/0
+      VipCIDR: 10.0.6.0/24
+      RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
@@ -68,7 +71,8 @@ tests:
       KeyPairName: $[taskcat_getkeypair]
       CAservPwd: $[taskcat_genpass_12A]
       OSType: Windows
-      RemoteAccessCIDR: 0.0.0.0/0
+      VipCIDR: 10.0.6.0/24
+      RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-evidian-safekit/
