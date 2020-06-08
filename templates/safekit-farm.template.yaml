@@ -41,6 +41,8 @@ Metadata:
         default: Number of Instances
       AvailabilityZones:
         default: Availability Zones
+      InstanceType:
+        default: Instance type
       PublicSubnet1CIDR:
         default: Public subnet 1 CIDR
       PublicSubnet2CIDR:
@@ -49,30 +51,28 @@ Metadata:
         default: Public subnet 3 CIDR
       PublicSubnet4CIDR:
         default: Public subnet 4 CIDR
-      InstanceType:
-        default: Instance Type
       OSType:
-        default: Operating System
+        default: Operating system
       RemoteAccessCIDR:
-        default: Allowed CIDR for SafeKit Console, SSH, RDP
+        default: Allowed CIDR for SafeKit environment
       KeyPairName:
-        default: Key Pair Name
+        default: Key pair name
       CAservPwd:
         default: Password
       SafekitModuleName:
-        default: Safekit Module Name
+        default: Safekit module name
       InstanceNamePrefix:
-        default: Server Name Prefix
+        default: Instance name prefix
       VipPort:
-        default: Virtual IP Port
+        default: Virtual IP port
       VipCIDR:
-        default: Allowed CIDR for Virtual IP
+        default: Allowed CIDR for virtual IP access to SafeKit web console
       QSS3BucketRegion:
         default: Quick Start S3 bucket Region
       QSS3KeyPrefix:
-        default: Quick Start S3 Key Prefix
+        default: Quick Start S3 key prefix
       QSS3BucketName:
-        default: S3 Bucket Name
+        default: Quick Start S3 bucket name
 Parameters:
   NumberOfInstances:
     AllowedValues:
@@ -120,59 +120,56 @@ Parameters:
       - m3.large
       - m4.large
     Default: t2.small
-    Description: Amazon EC2 instance type.
+    Description: Choose the Amazon EC2 instance type.
     Type: String
   KeyPairName:
-    Description: Public/private key pairs allow you to securely connect to your EC2
-      instance after it launches.
+    Description: Enter the public/private key pair you created in your preferred AWS Region; see the “Technical requirements” section of the deployment guide.
     Type: AWS::EC2::KeyPair::KeyName
     AllowedPattern: .+
-    ConstraintDescription: Key Pair Name must not be empty
-  CAservPwd:
-    Description: Password for SafeKit web console certificates. Password must be at least 8 chars long and contain at least one uppercase char and number. Password can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
-    Type: String
-    MinLength: 8
-    NoEcho: true
-    AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
-    ConstraintDescription: Certificate server password must be at least 8 chars long and contain at least one uppercase char and number
+    ConstraintDescription: Key pair name must not be empty.
+    CAservPwd:
+      Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase characters and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
+      Type: String
+      MinLength: 8
+      NoEcho: true
+      AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
+      ConstraintDescription: Certificate server password must be at least 8 characters long and contain at least one uppercase character and number.
   OSType:
     AllowedValues:
       - Linux
       - Windows
     Default: Linux
-    Description: Operating system - Choose either Linux or Windows
+    Description: Choose Windows to change the operating system.
     Type: String
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: Enter the CIDR IP range that is permitted to access SafeKit Envirnoment Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    Description: Enter the CIDR IP range that is permitted to access SafeKit environment. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   SafekitModuleName:
-    Description: Module name of the SakeKit mode being deployed. This is not editable.
+    Description: The name of the SafeKit module you're deploying. This is not editable.
     AllowedValues:
       - farm
     Default: farm
     Type: String
   VipPort:
-    Description: Port of the Virtual IP which is used to load balance the SafeKit farm.
+    Description: The port of the virtual IP that is used for failover of the SafeKit mirror. Enter a port 1-49151.
     Type: Number
     Default: 9453
     MinValue: 1
     MaxValue: 49151
   VipCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
-    ConstraintDescription: Allowed CIDR block for external access to SafeKit Web Console.
-    Description: Enter the CIDR IP range that is permitted to access SafeKit Web Console. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: Enter the CIDR IP range that is permitted to access SafeKit web console. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   InstanceNamePrefix:
-    Description: Server name prefix in the SafeKit web console for each instance
-    Default: Server
+    Description: The prefix in the SafeKit web console for each instance name. Enter a different name if required for your configuration.
+    Default: server
     Type: String
   QSS3BucketName:
     Default: aws-quickstart
-    Description: S3 bucket name for the Quick Start assets. This string can include
-      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
-      or end with a hyphen (-).
+    Description: The S3 bucket that you created for your copy of Quick Start assets. Use this if you decide to customize the Quick Start. This bucket name can include numbers, lowercase letters, uppercase letters, and hyphens but should not start or end with a hyphen.
     Type: String
   QSS3BucketRegion:
     Default: 'us-east-1'
@@ -180,12 +177,9 @@ Parameters:
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
-    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
-      uppercase letters, hyphens (-), and forward slash (/).
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Default: quickstart-evidian-safekit/
-    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
-      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
-      forward slash (/).
+    Description: The S3 key name prefix that is used to simulate a folder for your copy of Quick Start assets. Use this if you decide to customize the Quick Start. This prefix can include numbers, lowercase letters, uppercase letters, hyphens, and forward slashes. See https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html.
     Type: String
 Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']

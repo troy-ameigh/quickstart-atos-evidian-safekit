@@ -45,7 +45,7 @@ Metadata:
       OSType:
         default: Operating system
       RemoteAccessCIDR:
-        default: Allowed CIDR for SafeKit console, SSH, RDP
+        default: Allowed CIDR for SafeKit environment
       KeyPairName:
         default: Key pair name
       CAservPwd:
@@ -57,7 +57,7 @@ Metadata:
       VipPort:
         default: Virtual IP port
       VipCIDR:
-        default: Allowed CIDR for virtual IP
+        default: Allowed CIDR for virtual IP access to SafeKit web console
       QSS3BucketRegion:
         default: Quick Start S3 bucket Region
       QSS3KeyPrefix:
@@ -85,13 +85,13 @@ Parameters:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.128.0/20
-    Description: CIDR block for the public subnet located in Availability Zone 1. The default (0.0.0.0/0) allows access from any IP address. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    Description: CIDR block for the public DMZ subnet 1 located in Availability Zone 1
     Type: String
   PublicSubnet2CIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.144.0/20
-    Description: CIDR block for the public subnet located in Availability Zone 2. The default (0.0.0.0/0) allows access from any IP address. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    Description: CIDR block for the public DMZ subnet 2 located in Availability Zone 2
     Type: String
   KeyPairName:
     Description: Enter the public/private key pair you created in your preferred AWS Region; see the “Technical requirements” section of the deployment guide.
@@ -99,12 +99,12 @@ Parameters:
     AllowedPattern: .+
     ConstraintDescription: Key pair name must not be empty.
   CAservPwd:
-    Description: Password for SafeKit web console certificates. Must be at least 8 chars long and contain at least 1 uppercase char and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
+    Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase characters and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
     Type: String
     MinLength: 8
     NoEcho: true
     AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
-    ConstraintDescription: Certificate server password must be at least 8 chars long and contain at least one uppercase char and number.
+    ConstraintDescription: Certificate server password must be at least 8 characters long and contain at least one uppercase character and number.
   OSType:
     AllowedValues:
       - Linux
@@ -115,7 +115,7 @@ Parameters:
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
-    Description: Enter the CIDR IP range that is permitted to access SafeKit Envirnoment Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    Description: Enter the CIDR IP range that is permitted to access SafeKit environment. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   SafekitModuleName:
     Description: The name of the SafeKit module you're deploying. This is not editable.
@@ -124,19 +124,19 @@ Parameters:
     Default: mirror
     Type: String
   VipPort:
-    Description: The port of the virtual IP that is used for failover of the SafeKit mirror. This is not editable.
+    Description: The port of the virtual IP that is used for failover of the SafeKit mirror. Enter a port 1-49151.
     Type: Number
     Default: 9453
     MinValue: 1
     MaxValue: 49151
   VipCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
-    ConstraintDescription: Allowed CIDR block for external access to SafeKit Web Console.
-    Description: Enter the CIDR IP range that is permitted to access SafeKit Web Console. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: Enter the CIDR IP range that is permitted to access SafeKit web console. Set this value to a trusted IP range. For example, you might grant access only to your corporate network.
     Type: String
   InstanceNamePrefix:
-    Description: The instance name prefix in the SafeKit web console for each instance. Enter a different name if required for your configuration.
-    Default: Server
+    Description: The prefix in the SafeKit web console for each instance name. Enter a different name if required for your configuration.
+    Default: server
     Type: String
   QSS3BucketName:
     Default: aws-quickstart
