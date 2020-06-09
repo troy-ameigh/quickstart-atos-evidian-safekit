@@ -127,13 +127,13 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     AllowedPattern: .+
     ConstraintDescription: Key pair name must not be empty.
-    CAservPwd:
-      Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase characters and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
-      Type: String
-      MinLength: 8
-      NoEcho: true
-      AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
-      ConstraintDescription: Certificate server password must be at least 8 characters long and contain at least one uppercase character and number.
+  CAservPwd:
+    Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase characters and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
+    Type: String
+    MinLength: 8
+    NoEcho: true
+    AllowedPattern: ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*
+    ConstraintDescription: Certificate server password must be at least 8 characters long and contain at least one uppercase character and number.
   OSType:
     AllowedValues:
       - Linux
