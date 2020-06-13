@@ -51,7 +51,7 @@ Metadata:
       CAservPwd:
         default: Password
       SafekitModuleName:
-        default: Safekit module name
+        default: SafeKit module name
       InstanceNamePrefix:
         default: Instance name prefix
       VipPort:
