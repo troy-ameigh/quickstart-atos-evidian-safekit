@@ -29,7 +29,7 @@ tests:
       RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
-      QSS3KeyPrefix: quickstart-evidian-safekit/
+      QSS3KeyPrefix: quickstart-atos-evidian-safekit/
     regions:
     - us-west-2
     s3_bucket: ''
@@ -44,7 +44,7 @@ tests:
       RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
-      QSS3KeyPrefix: quickstart-evidian-safekit/
+      QSS3KeyPrefix: quickstart-atos-evidian-safekit/
     regions:
     - us-east-2
     s3_bucket: ''
@@ -60,8 +60,7 @@ tests:
       RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
-      QSS3KeyPrefix: quickstart-evidian-safekit/
-    regions:
+      QSS3KeyPrefix: quickstart-atos-evidian-safekit/
     - us-east-1
     s3_bucket: ''
     template: templates/safekit-farm.template.yaml
@@ -75,7 +74,7 @@ tests:
       RemoteAccessCIDR: 10.0.7.0/24
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
-      QSS3KeyPrefix: quickstart-evidian-safekit/
+      QSS3KeyPrefix: quickstart-atos-evidian-safekit/
     regions:
     - us-west-1
     s3_bucket: ''

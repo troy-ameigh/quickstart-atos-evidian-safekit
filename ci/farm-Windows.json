@@ -33,6 +33,6 @@
     },
     {
         "ParameterKey":"QSS3KeyPrefix",
-        "ParameterValue":"quickstart-evidian-safekit/"
+        "ParameterValue":"quickstart-atos-evidian-safekit/"
     }
 ]
