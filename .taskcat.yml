@@ -61,6 +61,7 @@ tests:
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-atos-evidian-safekit/
+    regions:
     - us-east-1
     s3_bucket: ''
     template: templates/safekit-farm.template.yaml
