@@ -1,5 +1,5 @@
 project:
-  name: quickstart-evidian-safekit
+  name: quickstart-atos-evidian-safekit
   owner: quickstart-eng@amazon.com
   package_lambda: false
   regions:
@@ -19,7 +19,7 @@ project:
   - us-west-2
   s3_bucket: ''
 tests:
-  quickstart-evidian-safekit-mirror-Linux:
+  quickstart-atos-evidian-safekit-mirror-Linux:
     parameters:
       AvailabilityZones: $[alfred_getaz_2]
       KeyPairName: $[taskcat_getkeypair]
@@ -34,7 +34,7 @@ tests:
     - us-west-2
     s3_bucket: ''
     template: templates/safekit-mirror.template.yaml
-  quickstart-evidian-safekit-mirror-Windows:
+  quickstart-atos-evidian-safekit-mirror-Windows:
     parameters:
       AvailabilityZones: $[alfred_getaz_2]
       KeyPairName: $[taskcat_getkeypair]
@@ -49,7 +49,7 @@ tests:
     - us-east-2
     s3_bucket: ''
     template: templates/safekit-mirror.template.yaml
-  quickstart-evidian-safekit-farm-Linux:
+  quickstart-atos-evidian-safekit-farm-Linux:
     parameters:
       AvailabilityZones: $[alfred_getaz_4]
       KeyPairName: $[taskcat_getkeypair]
@@ -65,7 +65,7 @@ tests:
     - us-east-1
     s3_bucket: ''
     template: templates/safekit-farm.template.yaml
-  quickstart-evidian-safekit-farm-Windows:
+  quickstart-atos-evidian-safekit-farm-Windows:
     parameters:
       AvailabilityZones: $[alfred_getaz_2]
       KeyPairName: $[taskcat_getkeypair]

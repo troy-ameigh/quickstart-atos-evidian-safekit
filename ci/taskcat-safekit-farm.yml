@@ -1,7 +1,7 @@
 global:
   marketplace-ami: false
   owner: thierry.leconte@atos.net
-  qsname: quickstart-evidian-safekit
+  qsname: quickstart-atos-evidian-safekit
   regions:
   - ca-central-1
   - eu-central-1
