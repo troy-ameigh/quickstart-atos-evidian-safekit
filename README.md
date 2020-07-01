@@ -9,10 +9,14 @@ SafeKit works with various software clusters. Customers can configure clusters f
 
 The Quick Start offers two deployment options:
 
-- Deploy SafeKit mirror into a new VPC
-- Deploy SafeKit farm into a new VPC
+- [Deploy SafeKit mirror into a new VPC](https://fwd.aws/8VgKN)
+- [Deploy SafeKit farm into a new VPC](https://fwd.aws/4wRxE)
 
-For architectural details, step-by-step instructions, and customization options, see the deployment guide.
+![Quick Start architecture for SafeKit mirror on AWS](https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-mirror-architecture.5f208798f73a70e937f69b4df63087eaca1fb6d6.png)
+
+![Quick Start architecture for SafeKit farm on AWS](https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-farm-architecture.b48391a6ffa458a12be2d4b03204f764335bc242.png)
+
+For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/jKegE).
 
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
 
