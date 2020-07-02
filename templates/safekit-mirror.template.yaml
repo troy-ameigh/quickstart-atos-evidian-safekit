@@ -99,7 +99,7 @@ Parameters:
     AllowedPattern: .+
     ConstraintDescription: Key pair name must not be empty.
   CAservPwd:
-    Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase letter and 1 number. Can contain ^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*.
+    Description: Password for SafeKit web console certificates. Must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, and 1 number. Do not use quotation marks, backslashes, forward slashes, or the @ symbol.
     Type: String
     MinLength: 8
     NoEcho: true
