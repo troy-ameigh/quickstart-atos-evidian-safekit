@@ -21,6 +21,7 @@ The Quick Start offers two deployment options:
     <img src="https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-farm-architecture.b48391a6ffa458a12be2d4b03204f764335bc242.png">
 </p>
 <p align="center">Figure 2. Quick Start architecture for SafeKit farm on AWS</p>
+<br/><br/> 
 
 For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/jKegE).
 
