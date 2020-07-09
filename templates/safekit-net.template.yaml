@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This template creates the network resources needed by safekit-mirror
-  or safekit-farm template.
+  or safekit-farm template. (qs-1qtd7kpid)
 Parameters:
   VpcId:
     Description: Id of VPC
