@@ -13,12 +13,12 @@ The Quick Start offers two deployment options:
 - [Deploy SafeKit farm into a new VPC](https://fwd.aws/4wRxE) (Figure 2)
 
 <p align="center">
-    <img src="https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-mirror-architecture.5f208798f73a70e937f69b4df63087eaca1fb6d6.png">
+    <img src="https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-mirror-architecture.a79d711217587767e4b3c8eb53b78f26ef7ee567.png">
 </p>
 <p align="center">Figure 1. Quick Start architecture for SafeKit mirror on AWS</p>
 <br/><br/> 
 <p align="center">
-    <img src="https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-farm-architecture.b48391a6ffa458a12be2d4b03204f764335bc242.png">
+    <img src="https://d1.awsstatic.com/partner-network/QuickStart/datasheets/atos-evidian-safekit-farm-architecture.f23d491c3c8c2d90464ff6cdf28689ab2fab378b.png">
 </p>
 <p align="center">Figure 2. Quick Start architecture for SafeKit farm on AWS</p>
 <br/><br/> 
