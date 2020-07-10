@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: SafeKit Linux EC2 instance subtemplate (qs-1qtd7kpid)
+Description: SafeKit Linux EC2 instance subtemplate (qs-1qtdck0re)
 Parameters:
   AvailabilityZone:
     Description: Choose an Availability Zone
