@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This template creates a SafeKit mirror cluster installed in two Availability Zones
   in one Region. **WARNING** This template creates AWS resources. You will be billed
-  for the AWS resources used if you create a stack from this template. (qs-1qtdcll9f)
+  for the AWS resources used if you create a stack from this template. (qs-1qtdda188)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

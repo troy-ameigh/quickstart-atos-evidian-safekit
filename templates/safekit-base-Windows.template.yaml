@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: SafeKit Windows2016 EC2 instance subtemplate (qs-1qtdck0rn)
+Description: SafeKit Windows2016 EC2 instance subtemplate (qs-1qtdda1as)
 Parameters:
   AvailabilityZone:
     Description: Choose an Availability Zone

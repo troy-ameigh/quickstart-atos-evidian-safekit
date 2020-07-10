@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This template creates a  SafeKit Farm Cluster  installed in up to four availability
   zones in one region. **WARNING** This template creates AWS resources. You will be
-  billed for the AWS resources used if you create a stack from this template. (qs-1qtdck0pa)
+  billed for the AWS resources used if you create a stack from this template. (qs-1qtdda19o)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
