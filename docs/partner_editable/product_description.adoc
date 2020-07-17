@@ -2,7 +2,6 @@
 // Briefly describe the software. Use consistent and clear branding. 
 // Include the benefits of using the software on AWS, and provide details on usage scenarios.
 
-=== SafeKit on AWS
 
 Inside the Atos cybersecurity division, Evidian has developed SafeKit, a software-only high-availability product that helps companies secure 24/7 operation of critical applications. It does not require specific hardware, specific network configuration, or specific external storage. It lends itself to the AWS Cloud because it is hardware agnostic.
 
@@ -12,7 +11,7 @@ The unavailability of an application can be due to three types of problems that 
 * *Software (40%):* Software failures can be triggered by faulty software updates, software bugs, or overloaded services. SafeKit on AWS addresses these with smooth server-by-server updating, process monitoring, custom application checkers, and load balancing of front-end applications.
 * *Human errors (40%):* Problems related to human error include administration error and the inability to properly restart a critical service. The SafeKit interface enables users to control all their AWS clusters and servers from a single web console. They can access the console in a browser either on the servers or on an external workstation.
 
-=== Mirror and farm modules
+== Mirror and farm modules
 
 SafeKit works with various software clusters. Customers can configure clusters for a given application using one or more application modules: mirror modules, farm modules, or a combination. Mirror modules use primary and secondary servers with real-time file replication and failover. Farm modules use network load balancing with failover for up to four servers.
 
